@@ -1,0 +1,116 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="VDT_OnLoad">
+	<ribbon startFromScratch="false">
+		<tabs>
+			<tab id="tabVDT" label="VBA DevTools">
+				<group id="gpAddIn" label="Mode" imageMso="AddInsMenu">
+					<toggleButton id="btnAddInMode"
+                        label="AddInMode"
+                        screentip="AddIn Mode"
+                        supertip="Normal state is pressed, works in add-in mode. Unpress to edit your settings on wsMain."
+                        imageMso="AddInsMenu"
+                        size="large"
+                        tag="AddInMode"
+                        getPressed="VDT_GetPressed"
+                        onAction="VDT_ClickButton_WithGetPressed" />
+				</group>
+				
+				<group id="gpOpenEditClose" label="Work with App" imageMso="FileOpen">
+                    <dropDown id="ddAppDynamic"
+                        sizeString="WWWWWWWW"
+                        screentip="Select App"
+                        supertip="Select app to work with from the dropdown."
+                        getEnabled="VDT_GetEnabled"
+                        getItemCount="VDT_DropDown_GetItemCount"
+                        getItemLabel="VDT_DropDown_GetItemLabel"
+                        getSelectedItemIndex="VDT_DropDown_GetSelectedItemIndex"
+                        onAction="VDT_DropDown_OnAction"/>
+                    <button id="btnOpenXlsm"
+                        label="Open XLSM"
+                        screentip="Open XLSM"
+                        supertip="Open XLSM only."
+                        imageMso="MicrosoftExcel"
+                        size="normal"
+                        tag="gpOpenXlsm"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+                    <button id="btnCloseApp"
+                        label="Close App"
+                        screentip="Close App"
+                        supertip="Close the app and VBA project."
+                        imageMso="CloseDocument"
+                        tag="gpClose"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+                    <button id="btnOpenEdit"
+                        label="Open for Editing"
+                        screentip="Open for Editing"
+                        supertip="Open app to edit the code."
+                        imageMso="FileOpen"
+                        size="large"
+                        tag="gpOpen"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+				</group>
+				
+				<group id="gpCode" label="Code" imageMso="ExportTextFile">
+                    <button id="btnImportCode"
+                        label="Import"
+                        screentip="Import Code"
+                        supertip="Import the code from CodeDir."
+                        imageMso="ImportTextFile"
+                        tag="gpCode"
+                        size="normal"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+                    <button id="btnDelCode"
+                        label="Delete"
+                        screentip="Delete Code"
+                        supertip="Remove all code modules and code from MS Excel objects."
+                        imageMso="ReviewRejectChangeOrDeleteComment"
+                        tag="gpCode"
+                        size="normal"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+                    <button id="btnDumpCode"
+                        label="Dump .vb"
+                        screentip="Dump Code"
+                        supertip="Dump all code to single .vb file as text."
+                        imageMso="ExportFile"
+                        tag="gpCodeDump"
+                        size="normal"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+                    <splitButton
+                        id="splbtnCodeExport"
+                        tag="gpCodeExport"
+                        size="large"
+                        getEnabled="VDT_GetEnabled">
+                        <button id="btnExportCode"
+                            label="Export"
+                            screentip="Export Code"
+                            supertip="Export code to CodeDir. Choose to export without or with user forms."
+                            imageMso="ExportTextFile"
+                            onAction="VDT_ClickButton"/>
+                        <menu id="menuExport">
+                            <button id="itemExportExclForms"
+                                label="Excluding Forms"
+                                onAction="VDT_ClickButton"/>
+                            <button id="itemExportInclForms"
+                                label="Including Forms"
+                                onAction="VDT_ClickButton"/>
+                        </menu>
+                    </splitButton>
+				</group>
+				
+				<group id="gpExit" label="Exit" imageMso="MasterViewClose">
+                    <button id="btnExit"
+                        label="Close VBA DevTools"
+                        imageMso="MasterViewClose"
+                        size="large"
+                        getEnabled="VDT_GetEnabled"
+                        onAction="VDT_ClickButton"/>
+				</group>
+			</tab>
+		</tabs>
+	</ribbon>
+</customUI>
