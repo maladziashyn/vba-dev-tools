@@ -10,6 +10,10 @@ Sub DoCodeFileAction(ByVal ActionType As String)
     Select Case ActionType
         Case "open"
             Call oApp.AppOpenForEditing
+        Case "open xlsm"
+            Workbooks.Open oApp.AppFPath
+            oApp.IsOpen = True
+            RbxUI_VDT.Invalidate
         Case "import"
             Call oApp.CodeImport
         Case "delete"
@@ -20,6 +24,13 @@ Sub DoCodeFileAction(ByVal ActionType As String)
             Call oApp.CodeExport
         Case "export include forms"
             Call oApp.CodeExport(IncludeForms:=True)
+        Case "backup"
+            Call oApp.FileBackup
+        Case "build postfix"
+            Call oApp.AppBuild
+        Case "build no postfix"
+            Call oApp.AppBuild(WithPostfix:=False)
+        
         Case "close"
             Call oApp.AppClose
         

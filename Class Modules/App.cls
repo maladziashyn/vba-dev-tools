@@ -18,6 +18,8 @@ Private Const dirModules As String = "\Modules" ' 1 - vbext_ct_StdModule
 Private Const dirClassModules As String = "\Class Modules" ' 2 - vbext_ct_ClassModule
 Private Const dirObjects As String = "\Microsoft Excel Objects" ' 100 - vbext_ct_Document: ThisWorkbook, sheets
 Private Const dirForms As String = "\Forms" ' 3 - vbext_ct_MSForm
+Private Const dirOlderVer As String = "\older-versions"
+Private Const dirBuilds As String = "\Builds"
 
 Private Type TApp
     RequiresCodeImport As Boolean
@@ -31,7 +33,7 @@ Private Type TApp
     AppCell As Range ' app's cell in tblApps
     AppFile As String ' e.g.: app.xlam
     AppName As String ' e.g.: app
-    AppPath As String ' e.g.: ...\CodeDir\app.xlam
+    AppFPath As String ' e.g.: ...\CodeDir\app.xlam
     AppBackupFullName As String
 '    AppRemoteFullName As String
     AppGitRepoURL As String
@@ -95,7 +97,7 @@ Private Sub Class_Initialize()
         arrTmp = Split(.AppFile, ".")
         .AppName = arrTmp(0)
         .CodeDir = .AppCell.Offset(0, 10)
-        .AppPath = .CodeDir & "\" & .AppFile
+        .AppFPath = .CodeDir & "\" & .AppFile
         
         .BackupDir = .AppCell.Offset(0, 11)
         
@@ -145,7 +147,7 @@ Private Sub SetVBComponents()
     
 End Sub
 
-Sub AppOpenForEditing()
+Sub AppOpenForEditing(Optional ByVal ForBuild As Boolean = False)
 ' Open app's workbook taking into account app's attributes:
 ' if requires code import, if EnableEvents = True, if has launcher sub,
 ' if has password.
@@ -157,7 +159,7 @@ Sub AppOpenForEditing()
     End If
     
     Application.EnableEvents = self.RequiresEnableEvents
-    Set WbOpen = Workbooks.Open(self.AppPath)
+    Set WbOpen = Workbooks.Open(self.AppFPath)
     If self.AppPwd <> "" _
             And Application _
                 .Workbooks(self.AppFile) _
@@ -172,16 +174,18 @@ Sub AppOpenForEditing()
     End If
 
     ' To run launcher sub, EnableEvents should be set to True
-    With Application
-        If Not .EnableEvents Then
-            .EnableEvents = True
+    If Not ForBuild Then
+        With Application
+            If Not .EnableEvents Then
+                .EnableEvents = True
+            End If
+        End With
+        If self.LauncherSub <> "" Then
+            Application.Run "'" & self.AppFile & "'!" & self.LauncherSub
         End If
-    End With
-    If self.LauncherSub <> "" Then
-        Application.Run "'" & self.AppFile & "'!" & self.LauncherSub
+        self.IsOpen = IsWbOpen(self.AppFile)
+        RbxUI_VDT.Invalidate
     End If
-    self.IsOpen = IsWbOpen(self.AppFile)
-    RbxUI_VDT.Invalidate
 
 End Sub
 
@@ -557,6 +561,104 @@ Private Sub RemoveEmptyVBCompDirs()
     
 End Sub
 
+Sub FileBackup()
+' Send application file to backup directory.
+' Add the existing as a new backup to "older-versions" directory.
+    
+    Dim OlderVerTarget As String
+    Dim OlderVerDir As String
+    
+    ' Copy postfixed older version to "older-versions"
+    Call CopyFileFromTo(self.AppBackupFullName, self.BackupDir & dirOlderVer, True)
+Debug.Print "--- Backing up: " & self.AppName & " ---" & vbCr
+Debug.Print "From: " & self.AppBackupFullName & vbCr & "To: " & self.BackupDir & dirOlderVer & vbCr
+    
+    ' Copy latest version to BackupDir.
+    Call CopyFileFromTo(self.AppFPath, self.BackupDir)
+Debug.Print "From: " & self.AppFPath & vbCr & "To: " & self.BackupDir & vbCr
+    
+    MsgBox "File: " & self.AppName & vbCr & vbCr _
+        & "Current version backed up to local storage, " _
+        & "see report in 'Immediate window' in VB Editor (Ctrl+G).", _
+        vbInformation, MsbTitle & " | Back up file"
+    
+End Sub
+
+Sub AppBuild(Optional ByVal WithPostfix As Boolean = True)
+' Build app with build-number as postfix "-YYYYMMDD-HHMM" by default.
+' Set WithPostfix to False to build with clean name.
+' Save to Builds dir.
+    
+    Dim BuildNo As String
+    Dim BuildFullName As String
+    Dim BuildAppName As String
+    Dim FileExt As String
+    Dim Answer As Integer
+    Dim FNameExt As Variant
+    
+    If self.IsOpen Then
+        Err.Raise 850, "Build app", "Please close the app before building."
+    End If
+    Answer = MsgBox("Open bash and check the branch you're on!" _
+        & vbCr & vbCr _
+        & "Are you sure you want to build from this branch?", _
+        vbQuestion + vbOKCancel + vbDefaultButton2, MsbTitle)
+    If Answer <> 1 Then
+        Exit Sub
+    End If
+    
+    ' Open app, import code.
+    Call AppOpenForEditing(ForBuild:=self.IsAppForBuild)
+    Call SetVBComponents
+    
+    If self.AppPwd <> "" Then
+        ' Password protect VB Project, use DoEvents!
+        LockVBProject(WorkbookName:=self.wb.Name, password:=self.AppPwd) = True
+        DoEvents
+    End If
+    
+    FNameExt = Split(self.AppDeployFName, ".", -1, vbTextCompare)
+    BuildAppName = FNameExt(0)
+    FileExt = "." & FNameExt(1)
+    BuildNo = Format(Now, "yyyymmdd-hhmm")
+    Call DoBuildNoInjection(BuildNo)
+    Call MkDirTree(self.CodeDir & dirBuilds)
+    If WithPostfix Then
+        BuildFullName = self.CodeDir & dirBuilds & "\" & BuildAppName & "-" & BuildNo & FileExt
+    Else
+        BuildFullName = self.CodeDir & dirBuilds & "\" & BuildAppName & FileExt
+    End If
+    Application.EnableEvents = False ' because SaveAs is an event
+    Select Case FileExt
+        ' Read more on file formats: https://learn.microsoft.com/en-us/office/vba/api/excel.xlfileformat
+        Case ".xlam"
+            self.wb.SaveAs Filename:=BuildFullName, FileFormat:=xlOpenXMLAddIn
+        Case ".xlsb"
+            self.wb.SaveAs Filename:=BuildFullName, FileFormat:=xlExcel12
+        Case ".xlsm"
+            self.wb.SaveAs Filename:=BuildFullName, FileFormat:=xlOpenXMLWorkbookMacroEnabled
+        Case Else
+            Err.Raise 899, "AppBuild", "Check file extension."
+    End Select
+    Workbooks(self.wb.Name).Close savechanges:=True
+    MsgBox "Build complete:" & vbCr & vbCr & BuildFullName, _
+        vbInformation, MsbTitle
+    
+End Sub
+
+Private Sub DoBuildNoInjection(ByVal BuildNo As String)
+' Inject build number into app's hidden sheet.
+    
+    Dim InjData As Variant
+    
+    If self.InjectBuild = "" Then
+        Exit Sub
+    End If
+    InjData = Split(self.InjectBuild, ";", -1, vbTextCompare)
+    self.wb.Sheets(CInt(InjData(0))).Cells(CInt(InjData(1)), CInt(InjData(2))).Value = BuildNo
+    
+End Sub
+
 Public Property Get EditXlsm() As Boolean
     EditXlsm = self.EditXlsm
 End Property
@@ -565,4 +667,10 @@ Public Property Get IsOpen() As Boolean
 End Property
 Public Property Get AppNm() As String
     AppNm = self.AppName
+End Property
+Public Property Get AppFPath() As String
+    AppFPath = self.AppFPath
+End Property
+Public Property Let IsOpen(ByVal IsOp As Boolean)
+    self.IsOpen = IsOp
 End Property

@@ -23,6 +23,8 @@ Sub VDT_ClickButton(ByRef control As IRibbonControl)
             ThisWorkbook.Close savechanges:=True
         Case "btnOpenEdit"
             Call DoCodeFileAction("open")
+        Case "btnOpenXlsm"
+            Call DoCodeFileAction("open xlsm")
         Case "btnCloseApp"
             Call DoCodeFileAction("close")
         Case "btnImportCode"
@@ -35,6 +37,13 @@ Sub VDT_ClickButton(ByRef control As IRibbonControl)
             Call DoCodeFileAction("export exclude forms")
         Case "itemExportInclForms"
             Call DoCodeFileAction("export include forms")
+        Case "btnBackup"
+            Call DoCodeFileAction("backup")
+        Case "itemBuildPostfix"
+            Call DoCodeFileAction("build postfix")
+        Case "itemBuildNoPostfix"
+            Call DoCodeFileAction("build no postfix")
+        
     End Select
     
 End Sub

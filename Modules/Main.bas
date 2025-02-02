@@ -133,3 +133,74 @@ Sub MkDirTree(ByVal DirTree As String)
     End If
 End Sub
 
+Sub CopyFileFromTo(ByVal FileFrom As String, ByVal DirTo As String, _
+        Optional ByVal WithPostfix As Boolean = False)
+    
+    Dim PostfixedName As String
+    Dim FileTo As String
+    Dim NmExt As Variant
+    Dim Fso As New Scripting.FileSystemObject
+    Dim oFile As Scripting.File
+    
+    If WithPostfix Then
+        ' If the file has never been backed up, then move on
+        On Error GoTo SkipFileNotFoundErr
+    End If
+    Set oFile = Fso.GetFile(FileFrom)
+    
+    ' Create directory tree if not exists.
+    Call MkDirTree(DirTo)
+    
+    If WithPostfix Then
+        NmExt = Split(oFile.Name, ".")
+        PostfixedName = NmExt(0) _
+            & Format(oFile.DateLastModified, "-yyyymmdd-hhmm.") & NmExt(1)
+        FileTo = DirTo & "\" & PostfixedName
+    Else
+        FileTo = DirTo & "\" & oFile.Name
+    End If
+    
+    oFile.Copy Destination:=FileTo, OverWriteFiles:=True
+SkipFileNotFoundErr:
+    If Err.Number = 53 Then
+        MsgBox "This is the first time the file is backed up to BackupDir. " _
+            & "Nothing will be added to older versions directory.", _
+            vbInformation, MsbTitle
+        Err.Clear
+    End If
+    
+End Sub
+
+Sub JoinSelectionToString()
+' Join selection's cell values into a string using Sep(arator).
+    
+    Const Sep As String = ";"
+    
+    Dim Result As String
+    Dim Cell As Range
+    
+    For Each Cell In Selection
+        Result = Result & Cell.Value & Sep
+    Next Cell
+    Result = Left(Result, Len(Result) - 1)
+    Debug.Print Result
+    
+End Sub
+
+Sub SaveStringToFile(ByVal PrintText As String, Optional ByVal ToOpen As Boolean = False)
+' Print string to file.
+    
+    Dim FNum As Integer
+    Dim FPath As String
+    
+    FPath = Environ("tmp") & "\VBADevTools_OUTPUT.txt"
+    FNum = FreeFile
+    Open FPath For Output As FNum
+    Print #FNum, PrintText
+    Close #FNum
+    
+    If ToOpen Then
+        Shell """C:\Program Files\Notepad++\notepad++.exe"" """ & FPath & """", vbNormalFocus
+    End If
+    
+End Sub

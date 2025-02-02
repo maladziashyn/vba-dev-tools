@@ -1,9 +1,9 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="VDT_OnLoad">
-	<ribbon startFromScratch="false">
-		<tabs>
-			<tab id="tabVDT" label="VBA DevTools">
-				<group id="gpAddIn" label="Mode" imageMso="AddInsMenu">
-					<toggleButton id="btnAddInMode"
+    <ribbon startFromScratch="false">
+        <tabs>
+            <tab id="tabVDT" label="VBA DevTools">
+                <group id="gpAddIn" label="Mode" imageMso="AddInsMenu">
+                    <toggleButton id="btnAddInMode"
                         label="AddInMode"
                         screentip="AddIn Mode"
                         supertip="Normal state is pressed, works in add-in mode. Unpress to edit your settings on wsMain."
@@ -12,9 +12,8 @@
                         tag="AddInMode"
                         getPressed="VDT_GetPressed"
                         onAction="VDT_ClickButton_WithGetPressed" />
-				</group>
-				
-				<group id="gpOpenEditClose" label="Work with App" imageMso="FileOpen">
+                </group>
+                <group id="gpOpenEditClose" label="Work with App" imageMso="FileOpen">
                     <dropDown id="ddAppDynamic"
                         sizeString="WWWWWWWW"
                         screentip="Select App"
@@ -50,9 +49,8 @@
                         tag="gpOpen"
                         getEnabled="VDT_GetEnabled"
                         onAction="VDT_ClickButton"/>
-				</group>
-				
-				<group id="gpCode" label="Code" imageMso="ExportTextFile">
+                </group>
+                <group id="gpCode" label="Code" imageMso="ExportTextFile">
                     <button id="btnImportCode"
                         label="Import"
                         screentip="Import Code"
@@ -100,17 +98,47 @@
                                 onAction="VDT_ClickButton"/>
                         </menu>
                     </splitButton>
-				</group>
-				
-				<group id="gpExit" label="Exit" imageMso="MasterViewClose">
+                </group>
+                <group id="gpDeploy" label="Back up, Build" imageMso="DeliverableCreate">
+                    <button id="btnBackup"
+                        label="Back up"
+                        screentip="Back up"
+                        supertip="Save a backup copy to BackupDir."
+                        imageMso="FileUpdate"
+                        size="large"
+                        onAction="VDT_ClickButton"/>
+                    <menu id="menuBuild"
+                        label="Build from Branch"
+                        screentip="Build from Branch"
+                        supertip="Build app based on current branch in CodeDir. Check branch in bash."
+                        size="large"
+                        imageMso="DeliverableCreate"
+                        tag="gpBuild"
+                        getEnabled="VDT_GetEnabled"
+                        itemSize="large">
+                        <button id="itemBuildPostfix"
+                            label="Build with Postfix [DEFAULT]"
+                            screentip="Build with Postfix"
+                            supertip="Build and append postfix with build number: App-YYYYMMDD-HHMM.ext."
+                            imageMso="OutlineExpand"
+                            onAction="VDT_ClickButton"/>
+                        <button id="itemBuildNoPostfix"
+                            label="Build no Postfix [Dev]"
+                            screentip="Build no Postfix"
+                            supertip="Build without postfix, for DEV purposes, e.g. run app locally."
+                            imageMso="Clear"
+                            onAction="VDT_ClickButton"/>
+                    </menu>
+                </group>
+                <group id="gpExit" label="Exit" imageMso="MasterViewClose">
                     <button id="btnExit"
                         label="Close VBA DevTools"
                         imageMso="MasterViewClose"
                         size="large"
                         getEnabled="VDT_GetEnabled"
                         onAction="VDT_ClickButton"/>
-				</group>
-			</tab>
-		</tabs>
-	</ribbon>
+                </group>
+            </tab>
+        </tabs>
+    </ribbon>
 </customUI>
